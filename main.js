@@ -7,6 +7,7 @@ img.onload = function () {
 let canvas = document.querySelector('canvas');
 let ctx = canvas.getContext('2d');
 
+// Sprite rows numbers
 const DOWN = 0;
 const RIGHT = 3;
 const UP = 1;
@@ -18,11 +19,11 @@ const spriteHeight = 18;
 const scaledHeight = scale * spriteHeight;
 const scaledWidth = scale * spriteWidth;
 
-const cycleLoop = [0, 1, 0, 2];
+const cycleLoop = [0, 1, 0, 2]; // Animation cycle (columns of the sprites)
 let currentLoopIndex = 0;
 let frameCount = 0;
 let currentDirection = 0;
-let keypressed = false;
+let keypressed = false; // key pressed lock
 
 let playerX = 0;
 let playerY = 0;
@@ -71,7 +72,9 @@ function step() {
         }
         drawFrame(cycleLoop[currentLoopIndex], currentDirection, playerX, playerY);
         frameCount++;
-        if (frameCount < 15 && keypressed) { // Dont draw the image until 15 frames have rendered
+        if (frameCount < 15) { 
+            // Dont draw the image until 15 frames have rendered (15 fps
+            // ... without this it renders at 60fps and it looks stupid)
             window.requestAnimationFrame(step);
             return;
         }
