@@ -12,6 +12,7 @@ const DOWN = 0;
 const RIGHT = 3;
 const UP = 1;
 const LEFT = 2;
+let currentDirection = 0;
 
 const scale = 2;
 const spriteWidth = 16;
@@ -22,11 +23,13 @@ const scaledWidth = scale * spriteWidth;
 const cycleLoop = [0, 1, 0, 2]; // Animation cycle (columns of the sprites)
 let currentLoopIndex = 0;
 let frameCount = 0;
-let currentDirection = 0;
+
 let keypressed = false; // key pressed lock
+let lastTime;
 
 let playerX = 0;
 let playerY = 0;
+let playerMaxSpeed = 900;
 
 function drawFrame(frameX, frameY, canvasX, canvasY) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -36,6 +39,7 @@ function drawFrame(frameX, frameY, canvasX, canvasY) {
 }
 
 function setDirectionAndStartMoving(event) {
+    lastTime = Date.now();
     // console.log(event.keyCode)
     switch (event.keyCode) {
         case 37: startMoving(LEFT); break;
@@ -48,8 +52,10 @@ function setDirectionAndStartMoving(event) {
 function stopMoving() {
     window.cancelAnimationFrame(step);
     keypressed = false;
-    currentDirection = DOWN;
+    // currentDirection = DOWN;
     currentLoopIndex = 0;
+    lastTime = null;
+    frameCount = 0;
     drawFrame(0, currentDirection, playerX, playerY);
 }
 
@@ -59,32 +65,43 @@ function startMoving(direction) {
     window.requestAnimationFrame(step);
 }
 
+function updatePlayer(dTime) {
+    currentLoopIndex++;
+    if (currentLoopIndex >= cycleLoop.length) {
+        currentLoopIndex = 0;
+    }
+
+    if (currentDirection === DOWN) {
+        playerY += dTime * playerMaxSpeed;
+    } else if (currentDirection === UP) {
+        playerY -= dTime * playerMaxSpeed;
+    } else if (currentDirection === LEFT) {
+        playerX -= dTime * playerMaxSpeed;
+    } else if (currentDirection === RIGHT) {
+        playerX += dTime * playerMaxSpeed;
+    }
+
+    drawFrame(cycleLoop[currentLoopIndex], currentDirection, playerX, playerY);
+}
+
+
 function step() {
-    if(keypressed) {
-        if(currentDirection === DOWN) {
-            playerY = playerY + 5;
-        } else if(currentDirection === UP) {
-            playerY = playerY - 5;
-        } else if(currentDirection === LEFT) {
-            playerX = playerX - 5;
-        } else if(currentDirection === RIGHT) {
-            playerX = playerX + 5;
-        }
-        drawFrame(cycleLoop[currentLoopIndex], currentDirection, playerX, playerY);
+    if (keypressed) {
+
         frameCount++;
-        if (frameCount < 15) { 
-            // Dont draw the image until 15 frames have rendered (15 fps
-            // ... without this it renders at 60fps and it looks stupid)
-            window.requestAnimationFrame(step);
+        if (frameCount < 4) {
+            // Limit frames.
             return;
         }
         frameCount = 0;
-        
-        currentLoopIndex++;
-        if (currentLoopIndex >= cycleLoop.length) {
-            currentLoopIndex = 0;
-        }
-        window.requestAnimationFrame(step);        
+
+        let currentTime = Date.now();
+        let deltaTime = (currentTime - lastTime) / 1000;
+
+        updatePlayer(deltaTime);
+
+        lastTime = currentTime;
+        window.requestAnimationFrame(step);
     }
 }
 
