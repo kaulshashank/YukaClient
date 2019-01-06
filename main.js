@@ -19,6 +19,8 @@ const spriteWidth = 16;
 const spriteHeight = 18;
 const scaledHeight = scale * spriteHeight;
 const scaledWidth = scale * spriteWidth;
+const boundaryX = canvas.width - scaledWidth;
+const boundaryY = canvas.height - scaledHeight;
 
 const cycleLoop = [0, 1, 0, 2]; // Animation cycle (columns of the sprites)
 let currentLoopIndex = 0;
@@ -71,16 +73,34 @@ function updatePlayer(dTime) {
         currentLoopIndex = 0;
     }
 
-    if (currentDirection === DOWN) {
-        playerY += dTime * playerMaxSpeed;
-    } else if (currentDirection === UP) {
-        playerY -= dTime * playerMaxSpeed;
-    } else if (currentDirection === LEFT) {
-        playerX -= dTime * playerMaxSpeed;
-    } else if (currentDirection === RIGHT) {
-        playerX += dTime * playerMaxSpeed;
+    if(playerX >= 0 && playerX < boundaryX) {
+        if (currentDirection === LEFT) {
+            playerX -= dTime * playerMaxSpeed;
+        } else if (currentDirection === RIGHT) {
+            playerX += dTime * playerMaxSpeed;
+        }
+    } else {
+        if (playerX < 0) {
+            playerX = 0;
+        } else if (playerX > boundaryX) {
+            playerX = boundaryX;
+        }
     }
 
+    if(playerY >= 0 && playerY <= boundaryY) {
+        if (currentDirection === DOWN) {
+            playerY += dTime * playerMaxSpeed;
+        } else if (currentDirection === UP) {
+            playerY -= dTime * playerMaxSpeed;
+        }
+    } else {
+        if (playerY < 0) {
+            playerY = 0;
+        } else if (playerY >= boundaryY) {
+            playerY = boundaryY;
+        }
+    }
+   
     drawFrame(cycleLoop[currentLoopIndex], currentDirection, playerX, playerY);
 }
 
@@ -101,6 +121,7 @@ function step() {
         updatePlayer(deltaTime);
 
         lastTime = currentTime;
+        console.log(playerX, playerY)
         window.requestAnimationFrame(step);
     }
 }
