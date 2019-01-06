@@ -31,7 +31,17 @@ let lastTime;
 
 let playerX = 0;
 let playerY = 0;
-let playerMaxSpeed = 900;
+let playerMaxSpeed = 200;
+
+const MS = 1000/15;
+
+const debounce = (fn, ms = 0) => {
+    let timeoutId;
+    return function (...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn.apply(this, args), ms);
+    };
+};
 
 function drawFrame(frameX, frameY, canvasX, canvasY) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -65,7 +75,10 @@ function stopMoving() {
 function startMoving(direction) {
     currentDirection = direction;
     keypressed = true;
-    window.requestAnimationFrame(step);
+
+    let debounceRAF = debounce(window.requestAnimationFrame, MS)
+    debounceRAF(step);
+    // window.requestAnimationFrame(step);
 }
 
 function updatePlayer(dTime) {
@@ -74,25 +87,27 @@ function updatePlayer(dTime) {
         currentLoopIndex = 0;
     }
 
-    if(playerX >= 0 && playerX < boundaryX) {
+    let movement = dTime * playerMaxSpeed;
+
+    if (playerX >= 0 && playerX < boundaryX) {
         if (currentDirection === LEFT) {
-            playerX -= dTime * playerMaxSpeed;
+            playerX -= movement;
         } else if (currentDirection === RIGHT) {
-            playerX += dTime * playerMaxSpeed;
+            playerX += movement;
         }
     } else {
         if (playerX < 0) {
             playerX = 0;
         } else if (playerX > boundaryX) {
-            playerX = boundaryX;
+            playerX = boundaryX-1;
         }
     }
 
-    if(playerY >= 0 && playerY <= boundaryY) {
+    if (playerY >= 0 && playerY <= boundaryY) {
         if (currentDirection === DOWN) {
-            playerY += dTime * playerMaxSpeed;
+            playerY += movement;
         } else if (currentDirection === UP) {
-            playerY -= dTime * playerMaxSpeed;
+            playerY -= movement;
         }
     } else {
         if (playerY < 0) {
@@ -101,7 +116,7 @@ function updatePlayer(dTime) {
             playerY = boundaryY;
         }
     }
-   
+
     drawFrame(cycleLoop[currentLoopIndex], currentDirection, playerX, playerY);
 }
 
@@ -109,21 +124,18 @@ function updatePlayer(dTime) {
 function step() {
     if (keypressed) {
 
-        frameCount++;
-        if (frameCount < 4) {
-            // Limit frames.
-            return;
-        }
-        frameCount = 0;
-
         let currentTime = Date.now();
         let deltaTime = (currentTime - lastTime) / 1000;
 
         updatePlayer(deltaTime);
 
         lastTime = currentTime;
-        console.log(playerX, playerY)
-        window.requestAnimationFrame(step);
+        
+        let debounceRAF = debounce(window.requestAnimationFrame, MS)
+        debounceRAF(step);
+        // window.requestAnimationFrame(step);
+    } else {
+        return;
     }
 }
 
@@ -132,3 +144,6 @@ function init() {
     window.addEventListener('keydown', setDirectionAndStartMoving);
     window.addEventListener('keyup', stopMoving)
 }
+
+
+
